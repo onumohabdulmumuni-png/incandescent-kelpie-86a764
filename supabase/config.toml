@@ -1,0 +1,4 @@
+project_id = "anucho"
+
+[functions.api]
+verify_jwt = false

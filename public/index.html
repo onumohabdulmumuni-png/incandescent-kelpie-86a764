@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f6f2">
+  <title>ANUCHO — Point of Sale</title>
+  <style>
+    :root {
+      --ink: #172b27;
+      --muted: #788781;
+      --line: #e8ece8;
+      --paper: #fff;
+      --canvas: #f5f6f2;
+      --green: #164c3b;
+      --green-2: #23664f;
+      --mint: #eaf3ed;
+      --lime: #d3ef86;
+      --amber: #f4b65f;
+      --red: #d77063;
+      --shadow: 0 16px 48px rgba(24, 48, 39, .07);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--canvas); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
+    .login-screen { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, .92fr); background: #f5f6f2; }
+    .login-art { padding: clamp(32px, 6vw, 82px); background: var(--green); color: white; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; position: relative; }
+    .login-art:before, .login-art:after { content: ""; position: absolute; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; width: 660px; height: 660px; right: -270px; bottom: -240px; }
+    .login-art:after { width: 480px; height: 480px; right: -180px; bottom: -150px; }
+    .brand { display: flex; gap: 12px; align-items: center; font-weight: 750; letter-spacing: .14em; }
+    .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; background: var(--lime); color: var(--green); font-size: 19px; font-weight: 850; letter-spacing: 0; }
+    .art-copy { max-width: 600px; position: relative; z-index: 1; padding: 46px 0 74px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .17em; font-size: 11px; font-weight: 700; opacity: .7; }
+    .art-copy h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(48px, 6.6vw, 88px); letter-spacing: -.055em; line-height: .99; font-weight: 500; margin: 23px 0; }
+    .art-copy p { color: rgba(255,255,255,.76); font-size: 16px; line-height: 1.8; max-width: 430px; }
+    .art-footer { display: flex; align-items: center; gap: 10px; font-size: 12px; color: rgba(255,255,255,.7); }
+    .art-dot { background: var(--lime); width: 7px; height: 7px; border-radius: 50%; }
+    .login-panel { display: grid; place-items: center; padding: 32px; }
+    .login-card { width: min(100%, 430px); }
+    .login-card .brand { margin-bottom: 52px; }
+    .login-card h2 { font-family: Georgia, "Times New Roman", serif; font-size: 39px; line-height: 1.1; font-weight: 500; letter-spacing: -.04em; margin: 0 0 12px; }
+    .subtle { color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .auth-tabs { display: flex; gap: 23px; border-bottom: 1px solid var(--line); margin: 31px 0 23px; }
+    .auth-tab { background: none; border: 0; color: var(--muted); padding: 0 0 13px; font-size: 13px; font-weight: 650; position: relative; }
+    .auth-tab.active { color: var(--green); }
+    .auth-tab.active:after { content: ""; height: 2px; position: absolute; left: 0; right: 0; bottom: -1px; background: var(--green); border-radius: 2px; }
+    .auth-tab:focus-visible, .action-button:focus-visible, .nav-item:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+    .auth-error { color: #b94f45; background: #fff0ee; padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; margin: 14px 0; }
+    .field-label { display: block; font-size: 12px; font-weight: 650; margin: 18px 0 8px; }
+    .input-wrap { position: relative; }
+    .input-wrap input { width: 100%; padding: 13px 14px; border: 1px solid #dfe5df; border-radius: 9px; background: white; outline: none; color: var(--ink); }
+    .input-wrap input:focus { border-color: var(--green-2); box-shadow: 0 0 0 3px rgba(35,102,79,.09); }
+    .password-toggle { border: 0; background: none; color: var(--muted); position: absolute; right: 11px; top: 50%; transform: translateY(-50%); font-size: 12px; }
+    .login-options { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; margin: 17px 0 22px; }
+    .text-button { color: var(--green-2); font-weight: 650; border: 0; background: none; padding: 0; font-size: inherit; }
+    .primary-button { background: var(--green); color: white; border: 0; border-radius: 9px; padding: 13px 18px; font-size: 13px; font-weight: 700; width: 100%; transition: background .2s, transform .2s; }
+    .primary-button:hover { background: var(--green-2); transform: translateY(-1px); }
+    .divider { display: flex; align-items: center; gap: 14px; color: #a0aaa4; font-size: 11px; margin: 20px 0; }
+    .divider:before, .divider:after { content: ""; height: 1px; background: var(--line); flex: 1; }
+    .login-note { margin-top: 21px; font-size: 11px; text-align: center; color: #98a29c; line-height: 1.6; }
+    .app-shell { display: flex; min-height: 100vh; }
+    .sidebar { width: 244px; flex: 0 0 244px; background: var(--green); color: white; padding: 25px 16px 18px; display: flex; flex-direction: column; }
+    .sidebar .brand { padding: 0 12px 30px; }
+    .nav-heading { color: rgba(255,255,255,.42); text-transform: uppercase; font-size: 9px; letter-spacing: .16em; font-weight: 700; padding: 0 13px 10px; }
+    .nav-list { display: grid; gap: 4px; }
+    .nav-item { border: 0; background: transparent; color: rgba(255,255,255,.7); text-align: left; width: 100%; padding: 11px 12px; border-radius: 8px; display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 560; }
+    .nav-item:hover, .nav-item.active { color: white; background: rgba(255,255,255,.12); }
+    .nav-icon { width: 16px; height: 16px; display: inline-grid; place-items: center; font-size: 15px; }
+    .sidebar-bottom { margin-top: auto; }
+    .upgrade-card { background: rgba(255,255,255,.1); padding: 14px; border-radius: 10px; margin: 20px 3px; }
+    .upgrade-card strong { display: block; font-size: 12px; margin-bottom: 6px; }
+    .upgrade-card p { color: rgba(255,255,255,.65); line-height: 1.55; font-size: 10px; margin: 0 0 11px; }
+    .upgrade-card button { background: var(--lime); color: var(--green); padding: 8px 10px; font-size: 10px; border: 0; border-radius: 6px; font-weight: 700; }
+    .profile { border-top: 1px solid rgba(255,255,255,.14); padding: 17px 8px 3px; display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; color: var(--green); background: var(--lime); font-size: 10px; font-weight: 800; }
+    .profile-name { font-size: 11px; font-weight: 650; }
+    .profile-role { color: rgba(255,255,255,.54); font-size: 9px; margin-top: 4px; }
+    .main { min-width: 0; flex: 1; }
+    .topbar { height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(20px, 4vw, 52px); background: rgba(255,255,255,.68); border-bottom: 1px solid var(--line); }
+    .crumb { color: var(--muted); font-size: 12px; }
+    .crumb b { color: var(--ink); font-weight: 650; }
+    .top-actions { display: flex; align-items: center; gap: 16px; }
+    .search { position: relative; }
+    .search input { width: 200px; border: 1px solid var(--line); background: white; border-radius: 8px; padding: 9px 12px 9px 34px; outline: 0; font-size: 11px; }
+    .search:before { content: "⌕"; position: absolute; left: 12px; top: 5px; font-size: 20px; color: #89958e; }
+    .icon-button { border: 1px solid var(--line); background: white; color: var(--green); height: 34px; width: 34px; border-radius: 8px; font-size: 15px; position: relative; }
+    .notification:after { content: ""; position: absolute; top: 7px; right: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--red); }
+    .content { max-width: 1440px; margin: 0 auto; padding: 36px clamp(20px, 4vw, 52px) 48px; }
+    .page-title-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 15px; margin-bottom: 27px; }
+    .page-title-row h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; letter-spacing: -.04em; font-size: 34px; margin: 0 0 6px; }
+    .page-title-row p { margin: 0; color: var(--muted); font-size: 12px; }
+    .button-row { display: flex; gap: 9px; }
+    .action-button { border: 1px solid #dfe5df; background: white; color: var(--ink); border-radius: 8px; padding: 10px 13px; font-size: 11px; font-weight: 650; }
+    .action-button.strong { background: var(--green); border-color: var(--green); color: white; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .stat-card, .panel, .table-panel { background: var(--paper); border: 1px solid var(--line); border-radius: 11px; }
+    .stat-card { padding: 17px 18px; }
+    .stat-heading { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 11px; }
+    .stat-icon { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 8px; color: var(--green); background: var(--mint); font-size: 14px; }
+    .stat-value { font-family: Georgia, "Times New Roman", serif; font-size: 30px; letter-spacing: -.03em; margin: 15px 0 5px; }
+    .stat-foot { color: var(--muted); font-size: 10px; }
+    .up { color: var(--green-2); font-weight: 700; }
+    .down { color: #bd6c54; font-weight: 700; }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .85fr); gap: 15px; margin-top: 15px; }
+    .panel { padding: 19px; }
+    .panel-heading { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+    .panel-heading h3 { font-size: 13px; margin: 0 0 5px; }
+    .panel-heading p { color: var(--muted); font-size: 10px; margin: 0; }
+    .select-small { border: 1px solid var(--line); border-radius: 6px; background: white; padding: 6px 8px; color: var(--muted); font-size: 10px; }
+    .chart { height: 190px; width: 100%; }
+    .chart svg { width: 100%; height: 100%; overflow: visible; }
+    .chart-label { fill: #8c9891; font-size: 9px; }
+    .chart-grid { stroke: #edf0ed; stroke-width: 1; }
+    .chart-line { fill: none; stroke: var(--green-2); stroke-width: 2.5; stroke-linecap: round; }
+    .chart-fill { fill: url(#fade); }
+    .donut-wrap { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 4px 0 10px; }
+    .donut { width: 128px; height: 128px; border-radius: 50%; background: conic-gradient(var(--green) 0 42%, #78a88a 42% 72%, var(--lime) 72% 91%, #e8ece8 91%); display: grid; place-items: center; }
+    .donut-inner { height: 87px; width: 87px; border-radius: 50%; background: white; display: grid; place-items: center; align-content: center; }
+    .donut-inner strong { font-family: Georgia, serif; font-size: 23px; font-weight: 500; }
+    .donut-inner span { font-size: 9px; color: var(--muted); }
+    .legend { display: grid; gap: 11px; }
+    .legend-row { display: flex; align-items: center; gap: 7px; white-space: nowrap; color: var(--muted); font-size: 10px; }
+    .legend-row b { color: var(--ink); margin-left: auto; padding-left: 9px; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .table-panel { margin-top: 15px; overflow: hidden; }
+    .table-heading { display: flex; align-items: center; justify-content: space-between; padding: 17px 19px 13px; }
+    .table-heading h3 { margin: 0; font-size: 13px; }
+    .table-heading button { background: none; border: 0; color: var(--green-2); font-weight: 650; font-size: 10px; }
+    .table-scroll { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 620px; text-align: left; }
+    th { color: #929e97; text-transform: uppercase; letter-spacing: .08em; font-size: 9px; font-weight: 650; background: #fbfcfa; }
+    th, td { padding: 12px 19px; border-top: 1px solid #f0f2ef; }
+    td { font-size: 10px; }
+    .patent-name { font-weight: 650; font-size: 11px; }
+    .patent-id { color: var(--muted); font-size: 9px; margin-top: 4px; }
+    .status { display: inline-flex; align-items: center; gap: 5px; border-radius: 20px; padding: 5px 8px; font-size: 9px; font-weight: 650; white-space: nowrap; }
+    .status:before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .status.active { background: #edf5ef; color: #438360; }
+    .status.pending { background: #fff5e8; color: #c28a36; }
+    .status.expiring { background: #fff0ee; color: #c46b5d; }
+    .status.granted { background: #edf5ef; color: #438360; }
+    .status.filed, .status.in_review { background: #f0f3ff; color: #6375ae; }
+    .status.expired, .status.rejected, .status.inactive { background: #fff0ee; color: #c46b5d; }
+    .status.public { background: #edf5ef; color: #438360; }
+    .status.private { background: #f1f2f0; color: #788781; }
+    .status.owner { background: #edf5ef; color: #438360; }
+    .status.editor { background: #f0f3ff; color: #6375ae; }
+    .status.reviewer { background: #f1f2f0; color: #788781; }
+    .action-link { text-decoration: none; display: inline-flex; align-items: center; }
+    .row-actions { display: flex; gap: 7px; }
+    .row-actions button { padding: 5px 7px; border: 1px solid var(--line); background: white; border-radius: 5px; font-size: 9px; color: var(--green); }
+    .row-actions .delete { color: #bc5c51; }
+    .quick-card h3 { line-height: 1.5; }
+    .account-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+    .settings-form { max-width: 520px; }
+    .settings-form input { width: 100%; padding: 11px 12px; border: 1px solid #dfe5df; border-radius: 8px; background: white; color: var(--ink); }
+    .setup-only { display: none; }
+    .is-setup .setup-only { display: block; }
+    .is-setup .login-only { display: none; }
+    .is-setup #identityLabel { display: none; }
+    .empty-note { padding: 25px; text-align: center; color: var(--muted); font-size: 12px; }
+    .record-dialog { width: min(94vw, 520px); max-height: 86vh; padding: 0; border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow); color: var(--ink); }
+    .record-dialog::backdrop { background: rgba(15, 34, 28, .46); backdrop-filter: blur(2px); }
+    .dialog-form { padding: 23px; }
+    .dialog-header, .dialog-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .dialog-header h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; font-size: 27px; letter-spacing: -.03em; margin: 0; }
+    .dialog-close { border: 0; background: transparent; color: var(--muted); font-size: 22px; }
+    .dialog-fields { max-height: 60vh; overflow-y: auto; padding: 7px 1px 18px; }
+    .dialog-fields .field-label { margin-top: 13px; }
+    .dialog-fields textarea, .dialog-fields select { width: 100%; padding: 11px 12px; border: 1px solid #dfe5df; border-radius: 8px; background: white; color: var(--ink); }
+    .dialog-fields textarea { min-height: 80px; resize: vertical; }
+    .dialog-fields input[type="checkbox"] { accent-color: var(--green); margin-right: 7px; }
+    .dialog-footer { border-top: 1px solid var(--line); padding-top: 14px; justify-content: flex-end; }
+    .temp-password { display: block; width: 100%; margin-top: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: #f8faf7; font: 12px ui-monospace, monospace; }
+    .section-cards { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+    .quick-card { border: 1px solid var(--line); background: white; border-radius: 10px; padding: 17px; min-height: 130px; }
+    .quick-card .stat-icon { margin-bottom: 17px; }
+    .quick-card h3 { font-size: 13px; margin: 0 0 6px; }
+    .quick-card p { color: var(--muted); font-size: 10px; line-height: 1.6; margin: 0; }
+    .empty-note { padding: 30px; text-align: center; color: var(--muted); font-size: 12px; }
+    .pos-shell { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(310px, .75fr); gap: 18px; align-items: start; }
+    .pos-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
+    .pos-header h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; letter-spacing: -.04em; font-size: 34px; margin: 0 0 6px; }
+    .pos-header p { color: var(--muted); font-size: 12px; margin: 0; }
+    .pos-status { display: inline-flex; align-items: center; gap: 7px; color: var(--green-2); background: var(--mint); border-radius: 99px; padding: 8px 11px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .pos-status:before { content: ""; width: 7px; height: 7px; background: #64a77c; border-radius: 50%; }
+    .pos-catalog, .pos-cart { background: white; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .pos-catalog { padding: 18px; }
+    .pos-tools { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+    .pos-search { flex: 1; position: relative; }
+    .pos-search:before { content: "⌕"; position: absolute; left: 12px; top: 8px; color: var(--muted); font-size: 19px; }
+    .pos-search input { width: 100%; padding: 11px 12px 11px 34px; border: 1px solid var(--line); border-radius: 8px; outline: 0; font-size: 12px; }
+    .pos-search input:focus, .pos-payment select:focus, .pos-payment input:focus { border-color: var(--green-2); box-shadow: 0 0 0 3px rgba(35,102,79,.09); }
+    .pos-categories { display: flex; gap: 7px; overflow-x: auto; padding: 2px 0 13px; }
+    .pos-category { border: 1px solid var(--line); background: white; color: var(--muted); border-radius: 99px; padding: 7px 11px; font-size: 10px; white-space: nowrap; }
+    .pos-category.active { color: white; border-color: var(--green); background: var(--green); }
+    .pos-product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+    .pos-product { position: relative; min-width: 0; min-height: 154px; padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: #fff; text-align: left; color: var(--ink); transition: border-color .15s, transform .15s, box-shadow .15s; }
+    .pos-product:hover:not(:disabled) { border-color: #9fbdac; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(24,48,39,.07); }
+    .pos-product:disabled { cursor: not-allowed; opacity: .58; }
+    .pos-product-art { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 13px; border-radius: 12px; background: var(--mint); color: var(--green); font-family: Georgia, serif; font-size: 18px; }
+    .pos-product:nth-child(3n+2) .pos-product-art { background: #f3f0e5; color: #947a38; }
+    .pos-product:nth-child(3n) .pos-product-art { background: #edf0f7; color: #6375ae; }
+    .pos-product-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 700; }
+    .pos-product-meta { display: block; color: var(--muted); font-size: 9px; margin-top: 5px; }
+    .pos-product-bottom { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 12px; }
+    .pos-product-price { font-size: 13px; font-weight: 750; color: var(--green); }
+    .pos-stock { color: var(--muted); font-size: 9px; white-space: nowrap; }
+    .pos-stock.low { color: #ba6855; font-weight: 700; }
+    .pos-cart { position: sticky; top: 16px; }
+    .pos-cart-head { display: flex; align-items: center; justify-content: space-between; padding: 17px 18px; border-bottom: 1px solid var(--line); }
+    .pos-cart-head h2 { margin: 0; font-size: 14px; }
+    .pos-cart-count { color: var(--muted); font-size: 10px; }
+    .pos-cart-lines { max-height: 34vh; overflow-y: auto; padding: 4px 18px; }
+    .pos-cart-empty { padding: 30px 12px; text-align: center; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .pos-line { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; padding: 13px 0; border-bottom: 1px solid #f0f2ef; }
+    .pos-line-name { font-size: 11px; font-weight: 700; }
+    .pos-line-price { color: var(--muted); font-size: 10px; margin-top: 4px; }
+    .pos-line-total { font-size: 11px; font-weight: 700; text-align: right; }
+    .pos-quantity { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .pos-quantity button { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 6px; background: white; color: var(--green); font-size: 13px; }
+    .pos-quantity span { min-width: 12px; text-align: center; font-size: 10px; }
+    .pos-remove { border: 0 !important; color: #ae6054 !important; font-size: 12px !important; }
+    .pos-checkout { padding: 15px 18px 18px; background: #fbfcfa; border-top: 1px solid var(--line); }
+    .pos-payment { display: grid; gap: 9px; margin-bottom: 14px; }
+    .pos-payment label { display: grid; gap: 5px; color: var(--muted); font-size: 9px; font-weight: 650; }
+    .pos-payment input, .pos-payment select { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink); font-size: 11px; }
+    .pos-summary { display: grid; gap: 9px; }
+    .pos-summary-row { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .pos-summary-row.total { margin-top: 3px; padding-top: 11px; border-top: 1px solid var(--line); color: var(--ink); font-size: 14px; font-weight: 750; }
+    .pos-change { color: var(--green-2); font-weight: 700; }
+    .pos-complete { width: 100%; margin-top: 14px; padding: 12px; border: 0; border-radius: 8px; background: var(--green); color: white; font-size: 11px; font-weight: 750; }
+    .pos-complete:disabled { cursor: not-allowed; opacity: .45; }
+    .pos-clear { border: 0; background: transparent; color: #ae6054; font-size: 10px; font-weight: 650; }
+    .sales-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+    .sales-table td { vertical-align: middle; }
+    .receipt-print { display: none; }
+    .receipt-print h1 { margin: 0 0 4px; font-size: 21px; }
+    .receipt-print p { margin: 4px 0; font-size: 12px; }
+    .receipt-print table { min-width: 0; margin-top: 16px; }
+    .receipt-print th, .receipt-print td { padding: 7px 4px; font-size: 11px; }
+    .receipt-print .receipt-total { border-top: 2px solid #222; font-weight: 750; }
+    @media print {
+      body > *:not(#printReceipt) { display: none !important; }
+      #printReceipt { display: block !important; position: absolute; inset: 0; padding: 22px; color: #111; background: white; font: 12px/1.5 Arial, sans-serif; }
+      #printReceipt table { width: 100%; }
+    }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: white; padding: 12px 16px; border-radius: 8px; box-shadow: var(--shadow); font-size: 12px; z-index: 5; animation: appear .2s ease-out; }
+    @keyframes appear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 1000px) {
+      .sidebar { width: 205px; flex-basis: 205px; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .donut-wrap { justify-content: flex-start; }
+      .pos-shell { grid-template-columns: 1fr; }
+      .pos-cart { position: static; }
+      .pos-cart-lines { max-height: 290px; }
+    }
+    @media (max-width: 720px) {
+      .login-screen { grid-template-columns: 1fr; }
+      .login-art { min-height: 280px; padding: 25px; }
+      .art-copy { padding: 25px 0 20px; }
+      .art-copy h1 { font-size: 47px; margin: 13px 0; }
+      .art-copy p { font-size: 13px; margin: 0; }
+      .art-footer { display: none; }
+      .login-panel { padding: 31px 24px; }
+      .login-card .brand { margin-bottom: 34px; }
+      .sidebar { width: 64px; flex-basis: 64px; padding: 19px 8px; }
+      .sidebar .brand { padding: 0 4px 28px; }
+      .sidebar .brand-name, .nav-heading, .nav-label { display: none; }
+      .sidebar-bottom { display: flex; flex-direction: column; gap: 4px; }
+      .sidebar-bottom .upgrade-card, .sidebar-bottom .profile { display: none; }
+      .sidebar-bottom .nav-item { justify-content: center; padding: 12px 0; }
+      .nav-item { justify-content: center; padding: 12px 0; }
+      .nav-icon { font-size: 17px; }
+      .topbar { height: 62px; padding: 0 16px; }
+      .search { display: none; }
+      .content { padding: 26px 15px; }
+      .page-title-row { align-items: flex-start; flex-direction: column; }
+      .page-title-row h1 { font-size: 30px; }
+      .stats-grid { gap: 9px; }
+      .stat-card { padding: 13px; }
+      .stat-value { font-size: 26px; }
+      .stat-heading { font-size: 10px; }
+      .section-cards { grid-template-columns: 1fr; }
+      .sales-summary { grid-template-columns: 1fr; }
+      .pos-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pos-header { flex-direction: column; }
+      .pos-catalog { padding: 12px; }
+      .pos-cart-lines { padding-left: 13px; padding-right: 13px; }
+      .donut-wrap { gap: 13px; }
+      .donut { width: 105px; height: 105px; }
+      .donut-inner { height: 72px; width: 72px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="login-screen" id="loginScreen">
+    <div class="login-art">
+      <div class="brand"><div class="brand-mark">A</div><span class="brand-name">ANUCHO</span></div>
+      <div class="art-copy">
+        <div class="eyebrow">Your store. In sync.</div>
+        <h1>Make every<br>sale count.</h1>
+        <p>A clear, connected workspace for ringing up sales, keeping stock accurate and managing your products.</p>
+      </div>
+      <div class="art-footer"><span class="art-dot"></span> Your counter, inventory and reports in one place</div>
+    </div>
+    <div class="login-panel">
+      <div class="login-card">
+        <div class="brand"><div class="brand-mark">A</div><span style="color:var(--green)">ANUCHO</span></div>
+        <h2 id="authTitle">Welcome back</h2>
+        <p class="subtle" id="authDescription">Sign in to your ANUCHO sales workspace.</p>
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab active" data-mode="email" role="tab" aria-selected="true">Email address</button>
+          <button class="auth-tab" data-mode="phone" role="tab" aria-selected="false">Phone number</button>
+        </div>
+        <form id="loginForm">
+          <label class="field-label setup-only" for="fullName">Your name</label>
+          <div class="input-wrap setup-only"><input id="fullName" name="name" maxlength="120" placeholder="Your full name" autocomplete="name"></div>
+          <label class="field-label" id="identityLabel" for="identity">Email address</label>
+          <div class="input-wrap"><input id="identity" type="email" placeholder="you@company.com" autocomplete="username" required></div>
+          <label class="field-label" for="password">Password</label>
+          <div class="input-wrap"><input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required><button class="password-toggle" id="togglePassword" type="button">Show</button></div>
+          <label class="field-label setup-only" for="passwordConfirm">Confirm password</label>
+          <div class="input-wrap setup-only"><input id="passwordConfirm" type="password" placeholder="Confirm your password" autocomplete="new-password" minlength="12" maxlength="1024"></div>
+          <div class="login-options setup-only"><span class="subtle">Use at least 12 characters for your password.</span></div>
+          <div class="login-options login-only"><button class="text-button" type="button" data-action="forgot">Forgot password?</button></div>
+          <button class="primary-button" id="authSubmit" type="submit">Sign in to ANUCHO</button>
+          <div class="auth-error hidden" id="authError" role="alert"></div>
+        </form>
+        <p class="login-note" id="loginNote">Secure Supabase sign-in · Your team workspace is protected by account roles.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="app-shell hidden" id="appShell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">A</div><span class="brand-name">ANUCHO</span></div>
+      <div class="nav-heading">Store</div>
+      <nav class="nav-list" id="navigation">
+        <button class="nav-item active" aria-label="POS" title="Point of sale" data-page="POS"><span class="nav-icon" aria-hidden="true">▣</span><span class="nav-label">Point of sale</span></button>
+        <button class="nav-item" aria-label="Sales" title="Sales history" data-page="Sales"><span class="nav-icon" aria-hidden="true">▤</span><span class="nav-label">Sales</span></button>
+        <button class="nav-item" aria-label="Overview" title="Overview" data-page="Overview"><span class="nav-icon" aria-hidden="true">⌂</span><span class="nav-label">Overview</span></button>
+        <button class="nav-item" aria-label="Patent portfolio" title="Patent portfolio" data-page="Inventory"><span class="nav-icon" aria-hidden="true">▤</span><span class="nav-label">Patents</span></button>
+        <button class="nav-item" aria-label="Products" title="Products" data-page="Products"><span class="nav-icon" aria-hidden="true">◇</span><span class="nav-label">Products</span></button>
+        <button class="nav-item" aria-label="Suppliers" title="Suppliers" data-page="Suppliers"><span class="nav-icon" aria-hidden="true">⇄</span><span class="nav-label">Suppliers</span></button>
+        <button class="nav-item" aria-label="Reports" title="Reports" data-page="Reports"><span class="nav-icon" aria-hidden="true">▥</span><span class="nav-label">Reports</span></button>
+        <button class="nav-item" aria-label="Management" title="Management" data-page="Management"><span class="nav-icon" aria-hidden="true">♙</span><span class="nav-label">Management</span></button>
+        <button class="nav-item" aria-label="Showroom" title="Showroom" data-page="Showroom"><span class="nav-icon" aria-hidden="true">▧</span><span class="nav-label">Showroom</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="nav-heading">Preferences</div>
+        <button class="nav-item" aria-label="Settings" title="Settings" data-page="Settings"><span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-label">Settings</span></button>
+        <div class="upgrade-card"><strong>Keep your team in sync</strong><p>Invite teammates to help manage your store.</p><button type="button" data-page="Management">Invite a teammate</button></div>
+        <div class="profile"><div class="avatar user-avatar">A</div><div><div class="profile-name user-name">Workspace owner</div><div class="profile-role user-role">Workspace owner</div></div></div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div class="crumb">Workspace <span style="padding:0 7px;color:#b5beb8">/</span><b id="crumbPage">Overview</b></div><div class="top-actions"><label class="search"><input id="globalSearch" placeholder="Search patents..." aria-label="Search patents"></label><button class="icon-button notification" aria-label="Notifications" data-action="notifications">♧</button><button class="icon-button" aria-label="Sign out" title="Sign out" data-action="logout">↪</button><div class="avatar user-avatar">A</div></div></header>
+      <div class="content" id="pageContent"></div>
+    </main>
+  </div>
+  <div id="toast" class="toast hidden" role="status"></div>
+  <div id="printReceipt" class="receipt-print"></div>
+  <dialog class="record-dialog" id="recordDialog" aria-labelledby="dialogTitle">
+    <form class="dialog-form" id="recordForm">
+      <div class="dialog-header"><h2 id="dialogTitle"></h2><button class="dialog-close" type="button" aria-label="Close dialog" data-action="close-dialog">×</button></div>
+      <div class="dialog-fields" id="dialogFields"></div>
+      <div class="dialog-footer"><button class="action-button" type="button" data-action="close-dialog">Cancel</button><button class="action-button strong" id="dialogSubmit" type="submit">Save changes</button></div>
+    </form>
+  </dialog>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
